@@ -6,3 +6,4 @@ Feature: Test Spartan API with complete CRUD operations
     When User uses Mock Data to create a Spartan
     When Users send a request to Spartan API id 0
     Then Created Spartan has the same information with POST request
+    And User Updates all the fields of created Spartan

@@ -1,5 +1,6 @@
 package step_definitions;
 
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -18,6 +19,7 @@ public class SpartanFlowSteps {
     Response mockSpartanJSON;
     Response postResponse;
     Response getResponse;
+    Spartan mySpartan;
 
     @Given("user sends a request to Mock API for mock Spartan Data")
     public void userSendsARequestToMockAPIForMockSpartanData() {
@@ -29,7 +31,7 @@ public class SpartanFlowSteps {
 
     @When("User uses Mock Data to create a Spartan")
     public void userUsesMockDataToCreateASpartan() {
-        Spartan mySpartan = new Spartan();
+        mySpartan = new Spartan();
         mySpartan.setName(mockSpartanJSON.path("name"));
         mySpartan.setGender(mockSpartanJSON.path("gender"));
         Long phone = Long.valueOf(mockSpartanJSON.path("phone").toString());
@@ -67,5 +69,18 @@ public class SpartanFlowSteps {
 
         assertEquals(expectedName, actualName);
 
+    }
+
+    @And("User Updates all the fields of created Spartan")
+    public void userUpdatesAllTheFieldsOfCreatedSpartan() {
+        mySpartan.setName("Oscar");
+        mySpartan.setGender("Male");
+        mySpartan.setPhone(55512356L);
+        Response putResponse = given().accept(ContentType.JSON)
+                .and().pathParam("id", postResponse.path("data.id"))
+                .and().body(mySpartan)
+                .when().put(spartanUrl + "/api/spartans/{id}");
+
+        assertEquals(204, putResponse.statusCode());
     }
 }
