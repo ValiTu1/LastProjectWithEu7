@@ -1,9 +1,11 @@
 package step_definitions;
 
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import static org.junit.Assert.*;
 import pages.pojo.Spartan;
 import utilities.ConfigurationReader;
 
@@ -15,13 +17,14 @@ public class SpartanFlowSteps {
     String mockUrl = ConfigurationReader.get("mock.apiUrl");
     Response mockSpartanJSON;
     Response postResponse;
-
+    Response getResponse;
 
     @Given("user sends a request to Mock API for mock Spartan Data")
     public void userSendsARequestToMockAPIForMockSpartanData() {
          mockSpartanJSON = given().accept(ContentType.JSON)
-                .and().header("X-Api-Key", "2b113750")
+                .and().header("X-Api-Key", "2b113750")// I am sending authorization with headers
                 .when().get(mockUrl);
+        assertEquals(200, mockSpartanJSON.statusCode());
     }
 
     @When("User uses Mock Data to create a Spartan")
@@ -34,24 +37,35 @@ public class SpartanFlowSteps {
 
         System.out.println("mySpartan.toString() = " + mySpartan);
 
-        postResponse = given().accept(ContentType.JSON)
-                .contentType(ContentType.JSON)// I want JSON response
-                .and().body(mySpartan)
+        postResponse = given().accept(ContentType.JSON)// I want JSON response
+                .contentType(ContentType.JSON)//I send JSON body
+                .and().body(mySpartan)//serialize from JAVA to JSON
                 .when().post(spartanUrl + "/api/spartans");
 
         postResponse.prettyPrint();
+        assertEquals(201, postResponse.statusCode());
 
 
     }
 
     @When("Users send a request to Spartan API id {int}")
     public void users_send_a_request_to_spartan_api_id(int id) {
+        if(id==0){
+            id = postResponse.path("data.id");
 
-        Response response = given().accept(ContentType.JSON)
+        }
+        getResponse = given().accept(ContentType.JSON)
                 .and().pathParam("id", id)
                 .when().get(spartanUrl + "/api/spartans/{id}");
+        assertEquals(200, getResponse.statusCode());
+    }
 
-        //response.prettyPrint();
+    @Then("Created Spartan has the same information with POST request")
+    public void createdSpartanHasTheSameInformationWithPOSTRequest() {
+        String expectedName = postResponse.path("data.name");
+        String actualName = getResponse.path("name");
+
+        assertEquals(expectedName, actualName);
 
     }
 }
