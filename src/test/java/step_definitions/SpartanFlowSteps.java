@@ -7,6 +7,8 @@ import io.cucumber.java.en.When;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import static org.junit.Assert.*;
+
+import static org.hamcrest.Matchers.*;
 import pages.pojo.Spartan;
 import utilities.ConfigurationReader;
 
@@ -73,14 +75,34 @@ public class SpartanFlowSteps {
 
     @And("User Updates all the fields of created Spartan")
     public void userUpdatesAllTheFieldsOfCreatedSpartan() {
-        mySpartan.setName("Oscar");
+        mySpartan.setName("AgentSmith");
         mySpartan.setGender("Male");
-        mySpartan.setPhone(55512356L);
+        mySpartan.setPhone(1234567890L);
         Response putResponse = given().accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
                 .and().pathParam("id", postResponse.path("data.id"))
                 .and().body(mySpartan)
                 .when().put(spartanUrl + "/api/spartans/{id}");
 
         assertEquals(204, putResponse.statusCode());
+        assertEquals("", putResponse.body().asString());
+    }
+
+    @Then("User deletes Spartan {int}")
+    public void userDeletesSpartan(int id) {
+
+        if(id==0){
+            id = postResponse.path("data.id");
+        }
+
+        given().pathParam("id", id)
+                .when().delete(spartanUrl + "/api/spartans/{id}")
+                .then().statusCode(204);
+
+        given().accept(ContentType.JSON)
+                .pathParam("id", id)
+                .when().get(spartanUrl + "/api/spartans/{id}")
+                .then().statusCode(404)
+                .and().body("error", equalTo("Not Found"));
     }
 }
